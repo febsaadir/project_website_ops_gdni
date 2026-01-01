@@ -4,8 +4,9 @@ import {
   Download, Clock, XCircle, Calculator, FileUp, 
   PlusCircle, Check, X, RefreshCw, AlertTriangle, Save, Paperclip
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext'; // Import Auth untuk cek Role
 import { MOCK_DB, UPLOAD_HISTORY_DATA } from '../data/cashbackData';
-import { PRODUCT_DB } from '../data/productData'; // Pastikan path ini benar
+import { PRODUCT_DB } from '../data/productData';
 
 // --- HELPER FUNCTIONS ---
 const formatCompactNumber = (number) => {
@@ -18,6 +19,7 @@ const formatCompactNumber = (number) => {
 const formatIDR = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
 
 export default function Cashback() {
+  const { user } = useAuth(); // Ambil data user yang sedang login
   const [activeTab, setActiveTab] = useState('validator');
   
   // State Validator & Bulk
@@ -29,11 +31,12 @@ export default function Cashback() {
   const [bulkResultReady, setBulkResultReady] = useState(false);
 
   // State Submission & Form Manual
-  const [historyData, setHistoryData] = useState(UPLOAD_HISTORY_DATA);
+  // Default data diambil dari import, tapi nanti akan dimanipulasi
+  const [historyData, setHistoryData] = useState(UPLOAD_HISTORY_DATA); 
   const [showManualInput, setShowManualInput] = useState(false);
   const [showUploadInput, setShowUploadInput] = useState(false);
   
-  // State untuk File Upload
+  // State File Upload
   const fileInputRef = useRef(null);
   const [selectedFileName, setSelectedFileName] = useState('');
 
@@ -45,12 +48,38 @@ export default function Cashback() {
     invoicePrice: '', stpPromo: '', supportValue: 0, status: ''
   });
 
-  // --- LOGIC FORM MANUAL (AUTO FILL & CALCULATION) ---
-  useEffect(() => {
-    // 1. Auto-fill Produk by SKU (Case Insensitive Fix)
-    // Menggunakan .toUpperCase() agar ip13 tetap terbaca IP13
-    const upperSKU = formData.sku.toUpperCase();
+  // --- LOGIC FILTERING DATA BERDASARKAN ROLE & AREA ---
+  // Ini adalah otak utama agar Admin Jabo1 hanya melihat Jabo1
+  const filteredHistoryData = useMemo(() => {
+    if (!user) return [];
     
+    // Jika Super Admin (Head Office), lihat semua
+    if (user.role === 'super_admin') {
+      return historyData;
+    }
+    
+    // Jika Area Admin, filter berdasarkan user.area (Misal: 'Jabo1')
+    // Kita asumsikan format di DB 'Jabo 1' (dengan spasi) atau sesuaikan string-nya
+    // Disini kita pakai logic includes atau exact match
+    return historyData.filter(item => 
+      item.area.replace(/\s/g, '').toLowerCase() === user.area.replace(/\s/g, '').toLowerCase() || 
+      item.area.toLowerCase().includes(user.area.toLowerCase())
+    );
+  }, [historyData, user]);
+
+  // --- LOGIC DASHBOARD (MENGGUNAKAN DATA YANG SUDAH DI-FILTER) ---
+  const dashboardStats = useMemo(() => {
+    return filteredHistoryData.reduce((acc, curr) => {
+      acc.totalData += curr.totalData;
+      if (curr.status === 'Pending Review') acc.pendingCount += curr.totalData;
+      if (curr.status === 'Verified') acc.totalPaid += curr.totalClaim;
+      return acc;
+    }, { totalData: 0, pendingCount: 0, totalPaid: 0 });
+  }, [filteredHistoryData]);
+
+  // --- LOGIC FORM MANUAL (AUTO FILL) ---
+  useEffect(() => {
+    const upperSKU = formData.sku.toUpperCase();
     if (PRODUCT_DB[upperSKU]) {
       setFormData(prev => ({
         ...prev,
@@ -58,16 +87,13 @@ export default function Cashback() {
         productName: PRODUCT_DB[upperSKU].name
       }));
     } else if (formData.sku.length > 5) {
-        // Reset jika SKU salah/tidak lengkap tapi user sudah mengetik panjang
         setFormData(prev => ({ ...prev, type: '', productName: '' }));
     }
 
-    // 2. Auto-calculation Support Value
     const price = parseFloat(formData.invoicePrice) || 0;
     const stp = parseFloat(formData.stpPromo) || 0;
     setFormData(prev => ({ ...prev, supportValue: price - stp }));
 
-    // 3. Auto-check Status IMEI (Simulasi cek ke Database)
     if (formData.imei.length > 10) {
       const existing = MOCK_DB.find(item => item.imei === formData.imei);
       if (existing) {
@@ -88,22 +114,19 @@ export default function Cashback() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // --- LOGIC TOGGLE SUBMISSION ---
+  // --- INTERACTION HANDLERS ---
   const toggleManual = () => {
       setShowManualInput(!showManualInput);
-      setShowUploadInput(false); // Tutup yang upload jika buka manual
+      setShowUploadInput(false);
   };
 
   const toggleUpload = () => {
       setShowUploadInput(!showUploadInput);
-      setShowManualInput(false); // Tutup yang manual jika buka upload
+      setShowManualInput(false);
   };
 
-  // --- LOGIC FILE UPLOAD ---
   const handleFileSelect = (e) => {
-      if (e.target.files.length > 0) {
-          setSelectedFileName(e.target.files[0].name);
-      }
+      if (e.target.files.length > 0) setSelectedFileName(e.target.files[0].name);
   };
 
   const handleUploadSubmit = () => {
@@ -111,20 +134,8 @@ export default function Cashback() {
       alert(`File ${selectedFileName} berhasil diupload ke database!`);
       setShowUploadInput(false);
       setSelectedFileName('');
-      // Di sini nanti logika kirim ke backend
   };
 
-  // --- LOGIC DASHBOARD ---
-  const dashboardStats = useMemo(() => {
-    return historyData.reduce((acc, curr) => {
-      acc.totalData += curr.totalData;
-      if (curr.status === 'Pending Review') acc.pendingCount += curr.totalData;
-      if (curr.status === 'Verified') acc.totalPaid += curr.totalClaim;
-      return acc;
-    }, { totalData: 0, pendingCount: 0, totalPaid: 0 });
-  }, [historyData]);
-
-  // --- LOGIC SEARCH MANUAL ---
   const handleSearch = (e) => {
     e.preventDefault();
     setIsSearching(true);
@@ -141,7 +152,6 @@ export default function Cashback() {
     }, 800);
   };
 
-  // --- LOGIC BULK CHECK ---
   const handleBulkUpload = () => {
     setIsBulkProcessing(true);
     setBulkResultReady(false);
@@ -151,7 +161,6 @@ export default function Cashback() {
     }, 2000);
   };
 
-  // --- LOGIC ADMIN ACTIONS ---
   const handleUpdateStatus = (id, newStatus) => {
     let reason = '';
     if (newStatus === 'Declined') {
@@ -178,7 +187,7 @@ export default function Cashback() {
         </div>
       </div>
 
-      {/* DASHBOARD CARDS */}
+      {/* DASHBOARD CARDS (Dynamic based on filtered data) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 border-l-4 border-l-blue-500">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Data Submission</p>
@@ -219,7 +228,6 @@ export default function Cashback() {
           {/* --- TAB 1: VALIDATOR --- */}
           {activeTab === 'validator' && (
             <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
               {/* Kiri: Manual Search */}
               <div className="lg:col-span-7 space-y-6">
                 <div>
@@ -263,7 +271,7 @@ export default function Cashback() {
                 </div>
               </div>
 
-              {/* Kanan: Bulk Tools (REVISED) */}
+              {/* Kanan: Bulk Tools */}
               <div className="lg:col-span-5 space-y-6 border-l border-slate-200 dark:border-slate-800 lg:pl-8">
                 <div>
                    <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><FileSpreadsheet size={20} className="text-green-600"/> Bulk Checker</h2>
@@ -271,24 +279,21 @@ export default function Cashback() {
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
-                    
-                    {/* Template Section Revised (Klik Box untuk Download) */}
                     <div 
                         className="flex justify-between items-center p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group"
-                        onClick={() => alert("Mendownload Template_Check_IMEI.xlsx...")}
+                        onClick={() => alert("Mendownload Template Check IMEI")}
                         title="Klik untuk download template"
                     >
                         <div className="flex items-center gap-4">
                             <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg"><FileSpreadsheet size={24} className="text-green-600"/></div>
                             <div>
-                                <p className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">Template_Check_IMEI.xlsx</p>
+                                <p className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">Template Check IMEI</p>
                                 <p className="text-xs text-slate-400">Klik box ini untuk download template</p>
                             </div>
                         </div>
                         <Download size={20} className="text-slate-300 group-hover:text-blue-500 transition-colors"/>
                     </div>
 
-                    {/* Upload Box */}
                     {!isBulkProcessing && !bulkResultReady && (
                         <div onClick={handleBulkUpload} className="border-2 border-dashed border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/10 rounded-xl p-8 text-center cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors group">
                             <FileUp size={32} className="mx-auto text-blue-500 mb-2 group-hover:scale-110 transition-transform"/>
@@ -335,13 +340,12 @@ export default function Cashback() {
                     </div>
                 </div>
 
-                {/* FORM INPUT MANUAL (Revised Logic & Fields) */}
+                {/* FORM INPUT MANUAL */}
                 {showManualInput && (
                     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 rounded-xl animate-fade-in shadow-lg">
                         <h3 className="font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2"><PlusCircle size={20} className="text-blue-500"/> Form Pengajuan Cashback</h3>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                            {/* Baris 1: Program & Identitas */}
                             <div className="md:col-span-2">
                                 <label className="block text-xs font-bold text-slate-500 mb-1">Nama Program</label>
                                 <select className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm font-bold" value={formData.programName} onChange={handleInputChange} name="programName">
@@ -359,7 +363,6 @@ export default function Cashback() {
                                 <input type="text" name="sku" value={formData.sku} onChange={handleInputChange} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm font-mono uppercase focus:ring-2 focus:ring-blue-500" placeholder="Ketik SKU..." />
                             </div>
 
-                            {/* Baris 2: Detail Produk (Auto) & Dealer */}
                             <div className="md:col-span-2">
                                 <label className="block text-xs font-bold text-slate-500 mb-1">Nama Produk (Auto)</label>
                                 <input type="text" readOnly value={formData.productName} className="w-full p-2.5 border rounded-lg bg-slate-100 dark:bg-slate-700/50 dark:border-slate-700 text-sm text-slate-500 cursor-not-allowed" placeholder="Otomatis terisi saat SKU diketik..." />
@@ -368,12 +371,18 @@ export default function Cashback() {
                                 <label className="block text-xs font-bold text-slate-500 mb-1">Tipe Produk (Auto)</label>
                                 <input type="text" readOnly value={formData.type} className="w-full p-2.5 border rounded-lg bg-slate-100 dark:bg-slate-700/50 dark:border-slate-700 text-sm text-slate-500 cursor-not-allowed" />
                             </div>
+                            
+                            {/* REVISI POINT 3: PEMISAHAN DEALER ID DAN NAMA DEALER */}
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">Nama Dealer / ID</label>
-                                <input type="text" name="dealerName" value={formData.dealerName} onChange={handleInputChange} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm" placeholder="Contoh: Erafone / DLR-001" />
+                                <label className="block text-xs font-bold text-slate-500 mb-1">Dealer ID</label>
+                                <input type="text" name="dealerId" value={formData.dealerId} onChange={handleInputChange} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm uppercase" placeholder="Contoh: DLR-001" />
                             </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-bold text-slate-500 mb-1">Nama Dealer</label>
+                                <input type="text" name="dealerName" value={formData.dealerName} onChange={handleInputChange} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm" placeholder="Contoh: Erafone Megastore Depok" />
+                            </div>
+                            <div className="md:col-span-2"></div> {/* Spacer */}
 
-                            {/* Baris 3: Tanggal & Invoice */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 mb-1">Tanggal Invoice</label>
                                 <input type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm" />
@@ -391,7 +400,6 @@ export default function Cashback() {
                                 <input type="date" name="cermatiDate" value={formData.cermatiDate} onChange={handleInputChange} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm" />
                             </div>
 
-                            {/* Baris 4: Harga & Kalkulasi */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 mb-1">Harga Invoice (Rp)</label>
                                 <input type="number" name="invoicePrice" value={formData.invoicePrice} onChange={handleInputChange} className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm font-bold" />
@@ -413,55 +421,32 @@ export default function Cashback() {
                     </div>
                 )}
 
-                {/* FORM UPLOAD FILE (Revised: Real File Input) */}
+                {/* FORM UPLOAD */}
                 {showUploadInput && (
                     <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700 animate-fade-in">
-                        
-                        {/* Hidden Input File */}
-                        <input 
-                            type="file" 
-                            ref={fileInputRef}
-                            onChange={handleFileSelect}
-                            className="hidden" 
-                            accept=".xlsx, .xls, .csv"
-                        />
-
+                        <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept=".xlsx, .xls, .csv" />
                         <div 
                             className="border-2 border-dashed border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 rounded-xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:border-blue-500 transition-colors"
                             onClick={() => fileInputRef.current.click()}
                         >
                             <CloudUploadIcon />
-                            <p className="mt-4 font-bold text-slate-700 dark:text-slate-200">
-                                {selectedFileName ? selectedFileName : "Pilih File Rekap Excel"}
-                            </p>
+                            <p className="mt-4 font-bold text-slate-700 dark:text-slate-200">{selectedFileName ? selectedFileName : "Pilih File Rekap Excel"}</p>
                             <p className="text-xs text-slate-400">Maksimal 5MB (.xlsx)</p>
-                            <button className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 pointer-events-none">
-                                {selectedFileName ? "Ganti File" : "Pilih File dari Komputer"}
-                            </button>
+                            <button className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 pointer-events-none">{selectedFileName ? "Ganti File" : "Pilih File dari Komputer"}</button>
                         </div>
-
-                        {/* Submit Upload */}
                         {selectedFileName && (
                             <div className="mt-4 flex justify-end">
-                                <button 
-                                    onClick={handleUploadSubmit}
-                                    className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-lg"
-                                >
-                                    <Upload size={16}/> Upload ke Database
-                                </button>
+                                <button onClick={handleUploadSubmit} className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-lg"><Upload size={16}/> Upload ke Database</button>
                             </div>
                         )}
-
-                        {/* Template Download di dalam Upload Area */}
                         <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500 pt-4 border-t border-slate-200 dark:border-slate-800">
-                            <FileSpreadsheet size={16}/>
-                            <span>Belum punya format?</span>
+                            <FileSpreadsheet size={16}/><span>Belum punya format?</span>
                             <button className="text-blue-600 font-bold hover:underline" onClick={() => alert("Download template...")}>Download Template Rekap</button>
                         </div>
                     </div>
                 )}
 
-                {/* TABLE HISTORY (Existing) */}
+                {/* TABLE HISTORY (FILTERED BY ROLE) */}
                 <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase">
@@ -471,11 +456,13 @@ export default function Cashback() {
                                 <th className="px-6 py-4">File / Data</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Est. Claim</th>
-                                <th className="px-6 py-4 text-center">Admin Action</th>
+                                {/* REVISI POINT 1: HIDE ADMIN ACTION IF AREA ADMIN */}
+                                {user?.role === 'super_admin' && <th className="px-6 py-4 text-center">Admin Action</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-900">
-                            {historyData.map((item) => (
+                            {filteredHistoryData.length > 0 ? (
+                                filteredHistoryData.map((item) => (
                                 <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                     <td className="px-6 py-4 text-slate-500">{item.period}</td>
                                     <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">{item.area}</td>
@@ -490,15 +477,23 @@ export default function Cashback() {
                                         {item.reason && <p className="text-xs text-red-500 mt-1 italic">"{item.reason}"</p>}
                                     </td>
                                     <td className="px-6 py-4 font-mono text-slate-700 dark:text-slate-300">{formatIDR(item.totalClaim)}</td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex justify-center gap-2">
-                                            <button onClick={() => handleUpdateStatus(item.id, 'Pending Review')} className="p-1.5 hover:bg-orange-100 text-orange-500 rounded"><RefreshCw size={16}/></button>
-                                            <button onClick={() => handleUpdateStatus(item.id, 'Verified')} className="p-1.5 hover:bg-green-100 text-green-500 rounded"><Check size={16}/></button>
-                                            <button onClick={() => handleUpdateStatus(item.id, 'Declined')} className="p-1.5 hover:bg-red-100 text-red-500 rounded"><X size={16}/></button>
-                                        </div>
-                                    </td>
+                                    
+                                    {/* REVISI POINT 1: HIDE ADMIN ACTION IF AREA ADMIN */}
+                                    {user?.role === 'super_admin' && (
+                                        <td className="px-6 py-4">
+                                            <div className="flex justify-center gap-2">
+                                                <button onClick={() => handleUpdateStatus(item.id, 'Pending Review')} className="p-1.5 hover:bg-orange-100 text-orange-500 rounded"><RefreshCw size={16}/></button>
+                                                <button onClick={() => handleUpdateStatus(item.id, 'Verified')} className="p-1.5 hover:bg-green-100 text-green-500 rounded"><Check size={16}/></button>
+                                                <button onClick={() => handleUpdateStatus(item.id, 'Declined')} className="p-1.5 hover:bg-red-100 text-red-500 rounded"><X size={16}/></button>
+                                            </div>
+                                        </td>
+                                    )}
                                 </tr>
-                            ))}
+                            ))) : (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-8 text-center text-slate-400 italic">Tidak ada data submission untuk area ini.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
