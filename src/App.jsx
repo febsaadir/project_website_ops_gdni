@@ -6,6 +6,9 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Cashback from './pages/Cashback';
 import Incentive from './pages/Incentive';
+// IMPORT HALAMAN BARU
+import CheckCoverage from './pages/CheckCoverage';
+import TrackingAllocation from './pages/TrackingAllocation';
 
 // Komponen untuk memproteksi halaman (Harus Login dulu)
 const ProtectedRoute = ({ children }) => {
@@ -27,9 +30,14 @@ export default function App() {
               <Layout />
             </ProtectedRoute>
           }>
+            {/* Sales Ops Routes */}
             <Route index element={<Dashboard />} />
             <Route path="cashback" element={<Cashback />} />
             <Route path="incentive" element={<Incentive />} />
+            
+            {/* Supply Chain Routes (BARU) */}
+            <Route path="check-coverage" element={<CheckCoverage />} />
+            <Route path="tracking-allocation" element={<TrackingAllocation />} />
           </Route>
         </Routes>
       </Router>

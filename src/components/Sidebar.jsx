@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Wallet, Users, LogOut, Sun, Moon, X } from 'lucide-react';
+import { 
+  LayoutDashboard, Wallet, Users, LogOut, Sun, Moon, X, 
+  ShieldCheck, Truck, Box 
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import gdnLogo from '../assets/logo.png';
+import gdnLogo from '../assets/logo.png'; // Pastikan path logo benar
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
   const { user, logout } = useAuth();
@@ -24,22 +27,35 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     }
   }, [isDarkMode]);
 
-  const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Cashback', path: '/cashback', icon: Wallet },
-    { name: 'Incentive & Absen', path: '/incentive', icon: Users },
+  // --- STRUKTUR MENU BARU (GROUPING) ---
+  const menuGroups = [
+    {
+      title: "Sales Ops",
+      items: [
+        { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+        { name: 'Cashback', path: '/cashback', icon: Wallet },
+        { name: 'Incentive & Absen', path: '/incentive', icon: Users },
+      ]
+    },
+    {
+      title: "Supply Chain",
+      items: [
+        { name: 'Check Coverage', path: '/check-coverage', icon: ShieldCheck },
+        { name: 'Tracking Allocation', path: '/tracking-allocation', icon: Truck },
+      ]
+    }
   ];
 
   return (
     <>
       {/* Sidebar Container */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:shadow-none border-r border-slate-200 dark:border-slate-800 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:shadow-none border-r border-slate-200 dark:border-slate-800 flex flex-col ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Header Sidebar */}
-        <div className="h-24 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+        <div className="h-24 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex-shrink-0">
           <div className="flex items-center gap-3">
              {/* Logo */}
             <img src={gdnLogo} alt="GDN" className="h-10 w-auto" />
@@ -60,7 +76,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
         </div>
 
         {/* User Info Card */}
-        <div className="p-4">
+        <div className="p-4 flex-shrink-0">
             <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                 <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-bold mb-1">Current Session</p>
                 <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{user?.name}</p>
@@ -70,29 +86,41 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
             </div>
         </div>
 
-        {/* Navigation Menu */}
-        <nav className="flex-1 px-4 space-y-2 mt-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={() => window.innerWidth < 1024 && toggleSidebar()} // Auto close di mobile saat klik menu
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group font-medium ${
-                  isActive
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 dark:bg-primary dark:shadow-orange-500/20' // Active State (Biru di Light, Orange di Dark)
-                    : 'text-slate-500 dark:text-slate-400 hover:bg-secondary hover:text-white dark:hover:bg-primary dark:hover:text-white' // Inactive Hover Logic
-                }`
-              }
-            >
-              <item.icon size={20} className="transition-transform group-hover:scale-110" />
-              <span>{item.name}</span>
-            </NavLink>
+        {/* Navigation Menu (Scrollable Area) */}
+        <nav className="flex-1 px-4 space-y-6 overflow-y-auto py-2 custom-scrollbar">
+          {menuGroups.map((group, index) => (
+            <div key={index}>
+              {/* Group Title */}
+              <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                {group.title}
+              </p>
+              
+              {/* Group Items */}
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => window.innerWidth < 1024 && toggleSidebar()} 
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group font-medium text-sm ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 dark:bg-primary dark:shadow-orange-500/20' 
+                          : 'text-slate-500 dark:text-slate-400 hover:bg-secondary hover:text-white dark:hover:bg-primary dark:hover:text-white'
+                      }`
+                    }
+                  >
+                    <item.icon size={18} className="transition-transform group-hover:scale-110" />
+                    <span>{item.name}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-3 flex-shrink-0 bg-white dark:bg-slate-900">
           
           {/* Dark Mode Toggle */}
           <button
