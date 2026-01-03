@@ -6,11 +6,10 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Cashback from './pages/Cashback';
 import Incentive from './pages/Incentive';
-// IMPORT HALAMAN BARU
 import CheckCoverage from './pages/CheckCoverage';
 import TrackingAllocation from './pages/TrackingAllocation';
+import ProductInfo from './pages/ProductInfo'; // Import Halaman Baru
 
-// Komponen untuk memproteksi halaman (Harus Login dulu)
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div>Loading...</div>;
@@ -35,7 +34,10 @@ export default function App() {
             <Route path="cashback" element={<Cashback />} />
             <Route path="incentive" element={<Incentive />} />
             
-            {/* Supply Chain Routes (BARU) */}
+            {/* Product Routes (NEW) */}
+            <Route path="product-info" element={<ProductInfo />} />
+
+            {/* Supply Chain Routes */}
             <Route path="check-coverage" element={<CheckCoverage />} />
             <Route path="tracking-allocation" element={<TrackingAllocation />} />
           </Route>

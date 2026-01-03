@@ -36,11 +36,9 @@ export default function CheckCoverage() {
     setResult(null);
     setErrorMsg('');
 
-    // Simulasi Call API (Delay 1.5s)
     setTimeout(() => {
       setLoading(false);
       
-      // Cari di Dummy Data
       const found = COVERAGE_DB.find(item => 
         item.imei.toLowerCase() === imei.toLowerCase() || 
         item.serialNumber.toLowerCase() === imei.toLowerCase()
@@ -49,13 +47,12 @@ export default function CheckCoverage() {
       if (found) {
         setResult(found);
       } else {
-        // Jika tidak ditemukan di DB Perusahaan
         setErrorMsg('IMEI / Serial Number tidak ditemukan di database PT Global Danapati Niaga.');
       }
     }, 1500);
   };
 
-  // --- LOGIC BULK UPLOAD (Simulasi) ---
+  // --- LOGIC BULK UPLOAD ---
   const handleBulkUpload = () => {
     setIsBulkProcessing(true);
     setTimeout(() => {
@@ -84,7 +81,7 @@ export default function CheckCoverage() {
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center gap-4">
             <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full text-blue-600"><Globe size={24}/></div>
             <div>
-                <p className="text-xs text-slate-500 uppercase font-bold">Total Checked (Today)</p>
+                <p className="text-xs text-slate-500 uppercase font-bold">Total Checked</p>
                 <p className="text-xl font-bold text-slate-800 dark:text-white">1,240 <span className="text-xs font-normal">Unit</span></p>
             </div>
         </div>
@@ -106,7 +103,7 @@ export default function CheckCoverage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* KOLOM KIRI: FORM PENCARIAN (Manual & Bulk) */}
+        {/* KOLOM KIRI: FORM PENCARIAN */}
         <div className="lg:col-span-1 space-y-6">
             
             {/* Manual Search */}
@@ -142,7 +139,6 @@ export default function CheckCoverage() {
                     <Database size={18} className="text-green-500"/> Bulk Check
                 </h3>
                 
-                {/* Template Download (Clickable) */}
                 <div 
                     onClick={() => alert("Download Template Coverage...")}
                     className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-green-500 transition-colors group mb-4"
@@ -155,7 +151,6 @@ export default function CheckCoverage() {
                     <Download size={16} className="text-slate-400 group-hover:text-green-500"/>
                 </div>
 
-                {/* Upload Area */}
                 <div 
                     onClick={handleBulkUpload}
                     className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
@@ -210,12 +205,12 @@ export default function CheckCoverage() {
                 {/* RESULT CARD DETAIL */}
                 {!loading && result && (
                     <div className="space-y-6 animate-slide-up">
-                        {/* Status Banner */}
-                        <div className={`p-4 rounded-xl flex items-center justify-between ${result.coverageEnd !== '-' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'}`}>
-                            <div className="flex items-center gap-3">
-                                {result.coverageEnd !== '-' ? <CheckCircle className="text-green-600" size={32}/> : <AlertCircle className="text-slate-500" size={32}/>}
+                        {/* Status Banner (Mobile Responsive Font: text-base) */}
+                        <div className={`p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 ${result.coverageEnd !== '-' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'}`}>
+                            <div className="flex items-center gap-3 w-full sm:w-auto">
+                                {result.coverageEnd !== '-' ? <CheckCircle className="text-green-600 flex-shrink-0" size={32}/> : <AlertCircle className="text-slate-500 flex-shrink-0" size={32}/>}
                                 <div>
-                                    <h4 className={`font-bold text-lg ${result.coverageEnd !== '-' ? 'text-green-800 dark:text-green-300' : 'text-slate-700 dark:text-slate-300'}`}>
+                                    <h4 className={`font-bold text-base sm:text-lg ${result.coverageEnd !== '-' ? 'text-green-800 dark:text-green-300' : 'text-slate-700 dark:text-slate-300'}`}>
                                         {result.coverageEnd !== '-' ? 'Coverage Active' : 'Coverage Info Unavailable'}
                                     </h4>
                                     <p className="text-xs opacity-70">
@@ -223,9 +218,9 @@ export default function CheckCoverage() {
                                     </p>
                                 </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-left sm:text-right w-full sm:w-auto border-t sm:border-t-0 border-slate-200 dark:border-slate-700 pt-2 sm:pt-0">
                                 <p className="text-xs font-bold uppercase opacity-60">Coverage End</p>
-                                <p className="font-mono font-bold text-lg">{result.coverageEnd}</p>
+                                <p className="font-mono font-bold text-base sm:text-lg">{result.coverageEnd}</p>
                             </div>
                         </div>
 
@@ -236,26 +231,26 @@ export default function CheckCoverage() {
                             <div className="space-y-4">
                                 <h4 className="text-sm font-bold text-slate-400 uppercase border-b border-slate-100 dark:border-slate-800 pb-2">Product Info</h4>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
-                                    <div>
+                                    <div className="col-span-2">
                                         <p className="text-slate-500 text-xs">Product Name</p>
                                         <p className="font-bold text-slate-800 dark:text-white">{result.productName}</p>
                                     </div>
                                     <div>
                                         <p className="text-slate-500 text-xs">SKU</p>
-                                        <p className="font-mono text-slate-800 dark:text-white">{result.sku}</p>
+                                        <p className="font-mono text-slate-800 dark:text-white text-xs">{result.sku}</p>
                                     </div>
                                     <div>
                                         <p className="text-slate-500 text-xs">Serial Number</p>
-                                        <p className="font-mono text-slate-800 dark:text-white">{result.serialNumber}</p>
+                                        <p className="font-mono text-slate-800 dark:text-white text-xs">{result.serialNumber}</p>
                                     </div>
                                     <div>
                                         <p className="text-slate-500 text-xs">IMEI</p>
-                                        <p className="font-mono text-slate-800 dark:text-white">{result.imei || '-'}</p>
+                                        <p className="font-mono text-slate-800 dark:text-white text-xs">{result.imei || '-'}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Sales Info */}
+                            {/* Sales Info (Revisi: Layout Invoice diperbaiki) */}
                             <div className="space-y-4">
                                 <h4 className="text-sm font-bold text-slate-400 uppercase border-b border-slate-100 dark:border-slate-800 pb-2">Sales Info (Internal)</h4>
                                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -263,13 +258,16 @@ export default function CheckCoverage() {
                                         <p className="text-slate-500 text-xs">Dealer Name</p>
                                         <p className="font-bold text-slate-800 dark:text-white">{result.dealer}</p>
                                     </div>
+                                    
+                                    {/* Invoice No Pindah ke Baris Sendiri (col-span-2) agar tidak terpotong */}
+                                    <div className="col-span-2">
+                                        <p className="text-slate-500 text-xs">Invoice No</p>
+                                        <p className="font-medium text-slate-800 dark:text-white font-mono tracking-wide">{result.invoiceNo}</p>
+                                    </div>
+
                                     <div>
                                         <p className="text-slate-500 text-xs">Invoice Date</p>
                                         <p className="font-medium text-slate-800 dark:text-white">{result.invoiceDate}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-slate-500 text-xs">Invoice No</p>
-                                        <p className="font-medium text-slate-800 dark:text-white">{result.invoiceNo}</p>
                                     </div>
                                     <div>
                                         <p className="text-slate-500 text-xs">Coverage Start</p>

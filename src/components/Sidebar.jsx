@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, Wallet, Users, LogOut, Sun, Moon, X, 
-  ShieldCheck, Truck, Box 
+  ShieldCheck, Truck, Smartphone // Menambahkan ikon Smartphone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import gdnLogo from '../assets/logo.png'; // Pastikan path logo benar
@@ -35,6 +35,13 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
         { name: 'Cashback', path: '/cashback', icon: Wallet },
         { name: 'Incentive & Absen', path: '/incentive', icon: Users },
+      ]
+    },
+    // --- MENU BARU SESUAI REQUEST CARAKA ---
+    {
+      title: "Product",
+      items: [
+        { name: 'Product Information', path: '/product-info', icon: Smartphone },
       ]
     },
     {
