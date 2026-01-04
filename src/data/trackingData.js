@@ -17,7 +17,7 @@ export const INTERCOMPANY_DATA = [
     product: 'iPhone 16 128GB Teal',
     planQty: 1, // Porsi kecil
     fulfilledQty: 1, 
-    poList: ['PO/GDN2/2512/10133'], // Sesuai prompt
+    poList: ['PO/GDN2/2512/10133'], 
     status: 'Fulfilled'
   },
   {
@@ -56,7 +56,6 @@ export const DISTY_LOGS = [
 ];
 
 // 3. DATA REQUEST QUEUE (Request dari Area)
-// FIX: Gunakan format ISO (YYYY-MM-DDTHH:mm:ss) agar aman di semua browser
 export const REQUEST_QUEUE = [
   {
     id: 'REQ-101',
@@ -65,7 +64,7 @@ export const REQUEST_QUEUE = [
     area: 'Jabo 2',
     product: 'Airpods 4 ANC',
     qty: 3,
-    requestDate: '2026-01-04T09:00:00', // Format ISO dengan T
+    requestDate: '2026-01-04T09:00:00', // Format ISO Aman
     storage: 'WSK', 
     status: 'Pending', 
     approvalStatus: 'Approved' 
@@ -89,7 +88,7 @@ export const REQUEST_QUEUE = [
     area: 'Bali',
     product: 'iPhone 15 128GB Blue',
     qty: 2,
-    requestDate: '2026-01-01T08:00:00', // Sudah > 2 hari
+    requestDate: '2026-01-01T08:00:00', 
     storage: 'DG',
     status: 'Expired',
     approvalStatus: 'Approved'
