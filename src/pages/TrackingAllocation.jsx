@@ -3,12 +3,13 @@ import {
   Truck, MapPin, Package, ExternalLink, Calendar, 
   LayoutGrid, ArrowRightLeft, FileText, ShoppingCart,
   CheckCircle, XCircle, Clock, AlertTriangle, ChevronDown,
-  Upload, FileUp, Save, Search, Download, AlertCircle, Database
+  Upload, FileUp, Save, Search, Download, AlertCircle as AlertCircleIcon, Database
 } from 'lucide-react';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { useAuth } from '../context/AuthContext';
+// Pastikan path ini benar sesuai struktur folder Anda
 import { INTERCOMPANY_DATA, DISTY_LOGS, REQUEST_QUEUE } from '../data/trackingData';
 
 // Format Rupiah / Angka
@@ -27,11 +28,13 @@ export default function TrackingAllocation() {
   const [requestQueue, setRequestQueue] = useState(REQUEST_QUEUE);
   
   // State Storage Selection (Per Item Request)
-  const [selectedStorage, setSelectedStorage] = useState({});
+  // Tidak perlu state khusus object jika kita langsung update array requestQueue
 
   // --- LOGIC: EXPIRED CHECK (2 HARI) ---
   const checkExpiry = (dateString) => {
-    const reqDate = new Date(dateString);
+    // Parsing manual untuk format "YYYY-MM-DD HH:mm" agar aman di Safari/Firefox
+    // Asumsi format data: "2026-01-04 09:00"
+    const reqDate = new Date(dateString.replace(' ', 'T')); 
     const now = new Date('2026-01-04T12:00:00'); // Simulasi tanggal hari ini
     const diffTime = Math.abs(now - reqDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
@@ -69,8 +72,9 @@ export default function TrackingAllocation() {
 
   // --- CHART DATA PREPARATION ---
   const chartData = useMemo(() => {
+      if (!INTERCOMPANY_DATA) return [];
       const planVsReal = INTERCOMPANY_DATA.slice(0, 4).map(d => ({
-          name: d.product.substring(0, 15) + '...',
+          name: d.product.length > 15 ? d.product.substring(0, 15) + '...' : d.product,
           Plan: d.planQty,
           Fulfilled: d.fulfilledQty
       }));
@@ -179,7 +183,7 @@ export default function TrackingAllocation() {
       {activeTab === 'intercompany' && (
         <div className="space-y-6">
             <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 p-4 rounded-xl flex gap-3">
-                <AlertCircle className="text-blue-600 shrink-0" size={20}/>
+                <AlertCircleIcon className="text-blue-600 shrink-0" size={20}/>
                 <div>
                     <h4 className="font-bold text-blue-800 dark:text-blue-300 text-sm">Intercompany Planning Monitor</h4>
                     <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">Pastikan fulfillment PO sesuai dengan Plan yang telah dibuat sebelumnya. Prioritaskan barang aging untuk GDNus.</p>

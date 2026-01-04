@@ -1,82 +1,97 @@
 // src/data/trackingData.js
 
-export const WAREHOUSE_STOCK = {
-  WSK: { label: 'WSK (Main)', count: 450, color: 'text-blue-600', bg: 'bg-blue-100', access: 'Open' },
-  DG: { label: 'DG (Damage/Return)', count: 25, color: 'text-orange-600', bg: 'bg-orange-100', access: 'Open' },
-  NonDisty: { label: 'Non-Disty (Project)', count: 120, color: 'text-purple-600', bg: 'bg-purple-100', access: 'Restricted', approver: 'Dean / P\'Maic' },
-  Unsellable: { label: 'Unsellable (Reg)', count: 50, color: 'text-red-600', bg: 'bg-red-100', access: 'Locked', reason: 'Kemenperin Issue' },
-};
-
-export const INTERCOMPANY_POS = [
+// 1. DATA INTERCOMPANY (Plan vs PO)
+export const INTERCOMPANY_DATA = [
   {
-    id: 'PO/GDN2/2512/10133',
-    entity: 'PT Global Distribusi Nusantara',
-    product: 'iPhone 16 128GB Teal',
-    planQty: 1,
-    poQty: 1,
-    status: 'Fulfillable', // Sesuai Plan
-    date: '2025-12-28',
-  },
-  {
-    id: 'PO/GAN/2512/889',
-    entity: 'PT Global Astha Niaga (Mono)',
+    id: 'PLAN-001',
+    entity: 'PT Global Distribusi Nusantara (GDNus)',
     product: 'iPhone 13 128GB Midnight',
     planQty: 100,
-    poQty: 120, // Over Plan
-    status: 'Over Plan',
-    date: '2025-12-29',
+    fulfilledQty: 100, // Fullfilled
+    poList: ['PO/GDN2/2512/10130'],
+    status: 'Fulfilled'
   },
   {
-    id: 'PO/GTN/2512/554',
-    entity: 'PT Global Teknologi Niaga',
-    product: 'MacBook Air M2',
+    id: 'PLAN-002',
+    entity: 'PT Global Distribusi Nusantara (GDNus)',
+    product: 'iPhone 16 128GB Teal',
+    planQty: 1, // Porsi kecil
+    fulfilledQty: 1, 
+    poList: ['PO/GDN2/2512/10133'], // Sesuai prompt
+    status: 'Fulfilled'
+  },
+  {
+    id: 'PLAN-003',
+    entity: 'PT Global Astha Niaga (Mono)',
+    product: 'MacBook Air M3 13"',
     planQty: 50,
-    poQty: 20,
-    status: 'Fulfillable',
-    date: '2025-12-30',
+    fulfilledQty: 30, // Belum full
+    poList: ['PO/GAN/2512/5501'],
+    status: 'In Progress'
   }
 ];
 
-export const DISTY_OUTBOUND_LOG = [
-  { id: 'SO/GDN3/CM/2512/10169', branch: 'GDN3 Cempaka Mas', product: 'MacBook Air M4', qty: 5, date: '2025-12-25', status: 'Shipped' },
-  { id: 'SO/GDN3/RX/2512/10170', branch: 'GDN3 Roxy', product: 'iPhone 15 128GB', qty: 10, date: '2025-12-26', status: 'Processing' },
+// 2. DATA DISTY ALLOCATION (Log Barang Keluar / SO)
+export const DISTY_LOGS = [
+  {
+    id: 'SO-001',
+    branch: 'GDN3 Cempaka Mas',
+    area: 'Jabo 1',
+    product: 'MacBook Air M4 13" Space Grey',
+    qty: 5,
+    soNumber: 'SO/GDN3/CM/2512/10169',
+    date: '2025-12-28',
+    status: 'Shipped'
+  },
+  {
+    id: 'SO-002',
+    branch: 'GDN3 Banjarmasin',
+    area: 'Kalimantan',
+    product: 'iPad Air 5 64GB WiFi',
+    qty: 10,
+    soNumber: 'SO/GDN3/BJM/2512/2002',
+    date: '2025-12-29',
+    status: 'Processing'
+  }
 ];
 
+// 3. DATA REQUEST QUEUE (Request dari Area)
+// FIX: Gunakan format ISO (YYYY-MM-DDTHH:mm:ss) agar aman di semua browser
 export const REQUEST_QUEUE = [
   {
-    id: 'REQ-001',
-    requester: 'Agus',
+    id: 'REQ-101',
+    requestor: 'Agus',
     branch: 'GDN3 Roxy',
     area: 'Jabo 2',
     product: 'Airpods 4 ANC',
     qty: 3,
-    requestDate: '2026-01-03', // Masih valid (asumsi hari ini 4 Jan 2026)
-    status: 'Pending', // Pending, Ordered, Cancelled, Confirming
-    source: null,
-    pic: 'Rifqi' 
+    requestDate: '2026-01-04T09:00:00', // Format ISO dengan T
+    storage: 'WSK', 
+    status: 'Pending', 
+    approvalStatus: 'Approved' 
   },
   {
-    id: 'REQ-002',
-    requester: 'Bayan',
+    id: 'REQ-102',
+    requestor: 'Bayan',
     branch: 'GDN3 Cempaka Mas',
     area: 'Jabo 1',
-    product: 'iPad Gen 11 Wifi 512GB Purple',
+    product: 'iPad Gen 11 WiFi 512GB Purple',
     qty: 7,
-    requestDate: '2026-01-04', // Hari ini
-    status: 'Confirming',
-    source: 'WSK',
-    pic: 'Anda' // User session
+    requestDate: '2026-01-04T10:30:00',
+    storage: 'NonDisty', 
+    status: 'Confirming', 
+    approvalStatus: 'Waiting Approval' 
   },
   {
-    id: 'REQ-003',
-    requester: 'Siti',
-    branch: 'GDN3 Banjarmasin',
-    area: 'Kalimantan',
-    product: 'iPhone 13 128GB',
-    qty: 5,
-    requestDate: '2026-01-01', // Sudah Expired (> 2 hari)
-    status: 'Pending',
-    source: null,
-    pic: 'Anda'
+    id: 'REQ-103',
+    requestor: 'Siti',
+    branch: 'GDN3 Denpasar',
+    area: 'Bali',
+    product: 'iPhone 15 128GB Blue',
+    qty: 2,
+    requestDate: '2026-01-01T08:00:00', // Sudah > 2 hari
+    storage: 'DG',
+    status: 'Expired',
+    approvalStatus: 'Approved'
   }
 ];
