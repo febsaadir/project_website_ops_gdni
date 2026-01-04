@@ -1,99 +1,96 @@
-// src/data/productInfoData.js
+// src/data/trackingData.js
 
-// Import gambar
-
-// iPhone
-import imgIphone15 from '../assets/products/iphone_15_256GB.png';
-
-// Macbook
-import imgMacbookAirM2 from '../assets/products/macbook_air_m2.png';
-
-export const PRODUCT_CATALOG = [
+// 1. DATA INTERCOMPANY (Plan vs PO)
+export const INTERCOMPANY_DATA = [
   {
-    id: 'IP15-128', // Kita update ID ini agar sesuai dengan gambar
-    category: 'iPhone',
-    name: 'iPhone 15 128GB',
-    sku: 'MTP03PA/A',
-    image: imgIphone15, // Gunakan variabel import gambar
-    specs: ['A16 Bionic', 'USB-C', '48MP Camera', 'Dynamic Island'],
-    compatibility: [
-      'USB-C Charge Cable (Included)',
-      'MagSafe Charger',
-      'AirPods Pro (2nd Gen, USB-C)'
-    ],
-    pricing: {
-      stpNormal: 15100000,
-      stpPromo: 14850000, 
-      srpNormal: 16499000,
-      srpPromo: 15999000  
-    },
-    stockStatus: 'Available',
-    notes: 'Promo cashback berlaku hingga 31 Jan.'
-  },
-  // ... produk lainnya biarkan menggunakan placeholder atau tambahkan gambar lain jika ada
-  {
-    id: 'IPAD-10-WIFI',
-    category: 'iPad',
-    name: 'iPad (10th Gen) 64GB Wi-Fi',
-    sku: 'MPQ03PA/A',
-    image: null, // Jika null, nanti akan pakai ikon default
-    specs: ['A14 Bionic', '10.9" Liquid Retina', 'USB-C', 'Touch ID'],
-    compatibility: [
-      'Apple Pencil (USB-C)',
-      'Magic Keyboard Folio',
-      'Apple Pencil (1st Gen) - BUTUH ADAPTER'
-    ],
-    pricing: {
-      stpNormal: 6800000,
-      stpPromo: 6650000,
-      srpNormal: 7499000,
-      srpPromo: 7299000
-    },
-    stockStatus: 'Low Stock',
-    notes: 'Hati-hati, TIDAK kompatibel dengan Pencil Gen 2.'
+    id: 'PLAN-001',
+    entity: 'PT Global Distribusi Nusantara (GDNus)',
+    product: 'iPhone 13 128GB Midnight',
+    planQty: 100,
+    fulfilledQty: 100, // Fullfilled
+    poList: ['PO/GDN2/2512/10130'],
+    status: 'Fulfilled'
   },
   {
-    id: 'MBA-M2-13',
-    category: 'Mac',
-    name: 'MacBook Air 13" M2 Chip 256GB',
-    sku: 'MLXW3ID/A',
-    image: imgMacbookAirM2,
-    specs: ['M2 Chip', '13.6" Liquid Retina', 'MagSafe 3', '1080p Camera'],
-    compatibility: [
-      '30W USB-C Power Adapter',
-      'Magic Mouse 2',
-      'Studio Display'
-    ],
-    pricing: {
-      stpNormal: 15500000,
-      stpPromo: 14900000,
-      srpNormal: 16999000,
-      srpPromo: 16499000
-    },
-    stockStatus: 'Available',
-    notes: 'Best seller untuk mahasiswa.'
+    id: 'PLAN-002',
+    entity: 'PT Global Distribusi Nusantara (GDNus)',
+    product: 'iPhone 16 128GB Teal',
+    planQty: 1, // Porsi kecil
+    fulfilledQty: 1, 
+    poList: ['PO/GDN2/2512/10133'], // Sesuai prompt
+    status: 'Fulfilled'
   },
   {
-    id: 'ACC-PEN-USBC',
-    category: 'Accessories',
-    name: 'Apple Pencil (USB-C)',
-    sku: 'MUWA3ZA/A',
-    image: null,
-    specs: ['USB-C Charging', 'Magnetic Attach', 'Pixel-perfect precision'],
-    compatibility: [
-      'iPad (10th Gen)',
-      'iPad Air (4th, 5th Gen)',
-      'iPad Pro 11" (All Gen)',
-      'iPad Pro 12.9" (3rd Gen & later)',
-      'iPad mini (6th Gen)'
-    ],
-    pricing: {
-      stpNormal: 1250000,
-      stpPromo: 1250000,
-      srpNormal: 1399000,
-      srpPromo: 1399000
-    },
-    stockStatus: 'Available',
-    notes: 'Tidak support pressure sensitivity & wireless charging.'
+    id: 'PLAN-003',
+    entity: 'PT Global Astha Niaga (Mono)',
+    product: 'MacBook Air M3 13"',
+    planQty: 50,
+    fulfilledQty: 30, // Belum full
+    poList: ['PO/GAN/2512/5501'],
+    status: 'In Progress'
+  }
+];
+
+// 2. DATA DISTY ALLOCATION (Log Barang Keluar / SO)
+export const DISTY_LOGS = [
+  {
+    id: 'SO-001',
+    branch: 'GDN3 Cempaka Mas',
+    area: 'Jabo 1',
+    product: 'MacBook Air M4 13" Space Grey',
+    qty: 5,
+    soNumber: 'SO/GDN3/CM/2512/10169',
+    date: '2025-12-28',
+    status: 'Shipped'
+  },
+  {
+    id: 'SO-002',
+    branch: 'GDN3 Banjarmasin',
+    area: 'Kalimantan',
+    product: 'iPad Air 5 64GB WiFi',
+    qty: 10,
+    soNumber: 'SO/GDN3/BJM/2512/2002',
+    date: '2025-12-29',
+    status: 'Processing'
+  }
+];
+
+// 3. DATA REQUEST QUEUE (Request dari Area)
+export const REQUEST_QUEUE = [
+  {
+    id: 'REQ-101',
+    requestor: 'Agus',
+    branch: 'GDN3 Roxy',
+    area: 'Jabo 2',
+    product: 'Airpods 4 ANC',
+    qty: 3,
+    requestDate: '2026-01-04 09:00', // Masih berlaku
+    storage: 'WSK', // Default storage
+    status: 'Pending', // Pending, Ordered, Cancelled
+    approvalStatus: 'Approved' // Auto approved untuk WSK
+  },
+  {
+    id: 'REQ-102',
+    requestor: 'Bayan',
+    branch: 'GDN3 Cempaka Mas',
+    area: 'Jabo 1',
+    product: 'iPad Gen 11 WiFi 512GB Purple',
+    qty: 7,
+    requestDate: '2026-01-04 10:30',
+    storage: 'NonDisty', // Butuh approval Dean/Maic
+    status: 'Confirming', 
+    approvalStatus: 'Waiting Approval' // Butuh approval
+  },
+  {
+    id: 'REQ-103',
+    requestor: 'Siti',
+    branch: 'GDN3 Denpasar',
+    area: 'Bali',
+    product: 'iPhone 15 128GB Blue',
+    qty: 2,
+    requestDate: '2026-01-01 08:00', // Sudah > 2 hari (Expired)
+    storage: 'DG',
+    status: 'Expired',
+    approvalStatus: 'Approved'
   }
 ];
