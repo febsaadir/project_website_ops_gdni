@@ -7,9 +7,10 @@ import Dashboard from './pages/Dashboard';
 import Cashback from './pages/Cashback';
 import Incentive from './pages/Incentive';
 import CheckCoverage from './pages/CheckCoverage';
-import TrackingAllocation from './pages/TrackingAllocation';
-import ProductInfo from './pages/ProductInfo'; // Import Halaman Baru
+import DamageDOA from './pages/DamageDOA'; // Pastikan file ini ada di src/pages/DamageDOA.jsx
+import ProductInfo from './pages/ProductInfo'; 
 
+// Komponen untuk memproteksi halaman (Harus Login dulu)
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div>Loading...</div>;
@@ -34,12 +35,13 @@ export default function App() {
             <Route path="cashback" element={<Cashback />} />
             <Route path="incentive" element={<Incentive />} />
             
-            {/* Product Routes (NEW) */}
+            {/* Product Routes */}
             <Route path="product-info" element={<ProductInfo />} />
 
             {/* Supply Chain Routes */}
             <Route path="check-coverage" element={<CheckCoverage />} />
-            <Route path="tracking-allocation" element={<TrackingAllocation />} />
+            <Route path="doa" element={<DamageDOA />} /> {/* Path disederhanakan */}
+            
           </Route>
         </Routes>
       </Router>
